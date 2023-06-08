@@ -208,6 +208,20 @@ static int change_sensor_baudrate(urg_t *urg,
     return set_errno_and_return(urg, ret);
 }
 
+// function to clear the socket buffer to make sure that there isn't any garbage left in
+// the buffer from a previous connection
+static void clear_urg_communication_buffer(urg_t *urg, int timeout)
+{
+    char buffer[BUFFER_SIZE] = {};
+    int n = -1;
+
+    connection_write(&urg->connection, "\n", 1);
+
+    do {
+        n = connection_readline(&urg->connection,
+                                buffer, BUFFER_SIZE, timeout);
+    } while (n >= 0);
+}
 
 // ボーレートを変更しながら接続する
 static int connect_urg_device(urg_t *urg, long baudrate)
@@ -232,6 +246,9 @@ static int connect_urg_device(urg_t *urg, long baudrate)
         int ret;
 
         connection_set_baudrate(&urg->connection, try_baudrate[i]);
+
+        // clear the buffer before we continue
+        clear_urg_communication_buffer(urg, MAX_TIMEOUT);
 
         // QT を送信し、応答が返されるかでボーレートが一致しているかを確認する
         ret = scip_response(urg, "QT\n", qt_expected, MAX_TIMEOUT,

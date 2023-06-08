@@ -272,6 +272,13 @@ int tcpclient_read(urg_tcpclient_t* cli,
 
 int tcpclient_write(urg_tcpclient_t* cli, const char* buf, int size)
 {
+    // set a 1 second timeout
+    const int timeout = 1;
+    struct timeval tv;
+    tv.tv_sec = timeout / 1000; // millisecond to seccond
+    tv.tv_usec = (timeout % 1000) * 1000; // millisecond to microsecond
+    setsockopt(cli->sock_desc, SOL_SOCKET, SO_SNDTIMEO, &tv, sizeof(struct timeval));
+
     // blocking if data size is larger than system's buffer.
     return send(cli->sock_desc, buf, size, 0);  //4th arg 0: no flag
 }

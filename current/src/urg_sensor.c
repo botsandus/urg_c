@@ -35,7 +35,7 @@ enum {
     VV_RESPONSE_LINES = 7,
     II_RESPONSE_LINES = 9,
 
-    MAX_TIMEOUT = 140,
+    MAX_TIMEOUT = 500,
 };
 
 

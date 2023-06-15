@@ -98,6 +98,7 @@ extern "C" {
         int received_skip_step;
         urg_range_data_byte_t received_range_data_byte;
         int is_sending;
+        int ignore_checksum;
 
         urg_error_handler error_handler;
 
@@ -146,7 +147,7 @@ extern "C" {
     */
     extern int urg_open(urg_t *urg, urg_connection_type_t connection_type,
                         const char *device_or_address,
-                        long baudrate_or_port);
+                        long baudrate_or_port, int ignore_checksum);
 
 
     /*!

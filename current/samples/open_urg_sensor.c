@@ -41,7 +41,7 @@ int open_urg_sensor(urg_t *urg, int argc, char *argv[])
     }
 
     // \~japanese Ú‘±
-    if (urg_open(urg, connection_type, device, baudrate_or_port) < 0) {
+    if (urg_open(urg, connection_type, device, baudrate_or_port, 0) < 0) {
         printf("urg_open: %s, %ld: %s\n",
             device, baudrate_or_port, urg_error(urg));
         return -1;

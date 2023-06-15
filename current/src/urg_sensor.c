@@ -109,7 +109,8 @@ static int scip_response(urg_t *urg, const char* command,
         } else if (n > 0) {
             // エコーバック以外の行のチェックサムを評価する
             char checksum = buffer[n - 1];
-            if ((checksum != scip_checksum(buffer, n - 1)) &&
+            if ((urg->ignore_checksum == URG_FALSE) &&
+                (checksum != scip_checksum(buffer, n - 1)) &&
                 (checksum != scip_checksum(buffer, n - 2))) {
                 return set_errno_and_return(urg, URG_CHECKSUM_ERROR);
             }
@@ -480,7 +481,8 @@ static int receive_length_data(urg_t *urg, long length[],
 
         if (n > 0) {
             // チェックサムの評価
-            if (buffer[line_filled + n - 1] !=
+            if (urg->ignore_checksum == URG_FALSE &&
+                buffer[line_filled + n - 1] !=
                 scip_checksum(&buffer[line_filled], n - 1)) {
                 ignore_receive_data_with_qt(urg, urg->timeout);
                 return set_errno_and_return(urg, URG_CHECKSUM_ERROR);
@@ -592,7 +594,7 @@ static int receive_data(urg_t *urg, long data[], unsigned short intensity[],
         return set_errno_and_return(urg, URG_INVALID_RESPONSE);
     }
 
-    if (buffer[n - 1] != scip_checksum(buffer, n - 1)) {
+    if (urg->ignore_checksum == URG_FALSE && buffer[n - 1] != scip_checksum(buffer, n - 1)) {
         // チェックサムの評価
         ignore_receive_data_with_qt(urg, urg->timeout);
         return set_errno_and_return(urg, URG_CHECKSUM_ERROR);
@@ -682,7 +684,8 @@ static int receive_data(urg_t *urg, long data[], unsigned short intensity[],
 
 
 int urg_open(urg_t *urg, urg_connection_type_t connection_type,
-             const char *device_or_address, long baudrate_or_port)
+             const char *device_or_address, long baudrate_or_port, 
+             int ignore_checksum)
 {
     int ret;
     long baudrate = baudrate_or_port;
@@ -693,6 +696,7 @@ int urg_open(urg_t *urg, urg_connection_type_t connection_type,
     urg->timeout = MAX_TIMEOUT;
     urg->scanning_skip_scan = 0;
     urg->error_handler = NULL;
+    urg->ignore_checksum = ignore_checksum;
 
     // デバイスへの接続
     ret = connection_open(&urg->connection, connection_type,
@@ -803,7 +807,7 @@ long urg_time_stamp(urg_t *urg)
     if (strlen(p) != 5) {
         return set_errno_and_return(urg, URG_RECEIVE_ERROR);
     }
-    if (p[5] == scip_checksum(p, 4)) {
+    if (urg->ignore_checksum == URG_FALSE && urg->ignore_checksum == URG_FALSE && p[5] == scip_checksum(p, 4)) {
         return set_errno_and_return(urg, URG_CHECKSUM_ERROR);
     }
     return urg_scip_decode(p, 4);
